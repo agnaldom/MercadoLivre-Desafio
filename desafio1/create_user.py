@@ -14,3 +14,7 @@ LDAP_ADMIN_DN = "cn=admin,dc=mercadolivre,dc=br"
 # Ask for LDAP admin password
 def input_ldap_pass():
     return getpass.getpass("Enter LDAP manager password: ")
+
+
+######### main #############
+admin_pass = input_ldap_pass()
