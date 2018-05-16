@@ -13,7 +13,7 @@ junto com sua senha amazenada de forma segura.
 
 O desenvolvimento deve ser realizado em Python, Ruby ou Java.
 
-## DESAFIO MECARDO LIVRE 2
+## DESAFIO MERCADO LIVRE 2
 
 Desenvolver um sistema que acesse um conta de email de Gmail e leia e identifique os emails
 que tenha a palavra "DevOps" no assusnto ou  no corpo de email.
