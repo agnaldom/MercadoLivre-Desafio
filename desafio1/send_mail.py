@@ -9,7 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 MY_ADDRESS = 'agnaldoneto@ufpa.br'
-PASSWORD = 'ag071290nm '
+PASSWORD = 'ag071290nm'
 
 def get_contacts(filename):
     """
@@ -36,11 +36,11 @@ def read_template(filename):
     return Template(template_file_content)
 
 def main():
-    names, email = get_contacts('mycontacts.txt')
+    names, emails = get_contacts('mycontacts.txt')
     message_template = read_template('message.txt')
 
     # set up the SMTP server
-    s = smtplib.SMTP(host='smtp.ufpa.br', port=465)
+    s = smtplib.SMTP(host='smtp.ufpa.br', port=587)
     s.starttls()
     s.login(MY_ADDRESS, PASSWORD)
 
@@ -58,9 +58,12 @@ def main():
         msg['From']=MY_ADDRESS
         msg['To']=email
         msg['Subject']="This is TEST"
+        
+        # add in the message body
+        msg.attach(MIMEText(message, 'plain'))
 
         # send the message via the server set up earlier.
-        s.send_message(msg)
+        s.send_message(msg['From'], msg['To'], msg.as_string())
         del msg
 
     # terminate the SMTP session and close the connection
