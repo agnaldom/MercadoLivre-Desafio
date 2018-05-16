@@ -100,6 +100,7 @@ def create_user(user, admin_pass):
         ldap_conn.unbind_()
 
 ######### main #############
+def main()
 admin_pass = input_ldap_pass()
 try_ldap_bind(admin_pass)
 
@@ -112,3 +113,7 @@ create_user(user, admin_pass)
 print("")
 print("Account for user " + user['username'] + " (" + str(user['uid']) + ") successfuly created")
 print("Initial password is: " + user['password'])
+
+
+if __name__ == '__main__';
+    main()
