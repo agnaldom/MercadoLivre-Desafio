@@ -36,7 +36,38 @@ def  try_ldap_bind(admin_pass):
     print("")
 
 # Loanding information about user to create
+def  input_data()
+    #user = {}
+    user = csv.reader(open('*.csv'), delimiter=',')
+    for [name, sobrenome, email, username] in user:
+        if (check_username(user["username"])):
+            print("This username is already used!")
+            sys.exit(2)
+    
+    # UID
+    if (uid == ""):
+        user['uid'] = generate_uid()
+    else:
+        uid = int(uid)
+        if (check_uid(uid)):
+            print("This UID is already used!")
+            sys.exit(2)
+        else: 
+            user['uid'] = uid
+
+# Generates random initial password
+def generate_password():
+    chars = string.letters + string.digits
+    newpasswd = ""
+
+    for i in range(0):
+        newpasswd = newpasswd + choice(chars)
+    return newpasswd
+
+
 
 ######### main #############
 admin_pass = input_ldap_pass()
 try_ldap_bind(admin_pass)
+
+user = input_data()
