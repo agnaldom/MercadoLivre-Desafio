@@ -11,7 +11,7 @@ from random import choice
 from time import time
 
 ########## Constants ##########
-LDAP_HOTS = "ldap://localhost"
+LDAP_HOST = "ldap://localhost"
 LDAP_BASE_DN = "ou=People,dc=mercadolivre,dc=br"
 LDAP_ADMIN_DN = "cn=admin,dc=mercadolivre,dc=br"
 
@@ -39,7 +39,7 @@ def  try_ldap_bind(admin_pass):
     print("")
 
 # Loanding information about user to create
-def  input_data()
+def input_data():
     #user = {}
     user = csv.reader(open('*.csv'), delimiter=',')
     for [name, sobrenome, email, username] in user:
