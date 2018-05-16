@@ -70,7 +70,8 @@ def generate_password():
 # Creates new entry in LDAP for given user
 def create_user(user, admin_pass):
     dn = 'uid=' + user['username'] + ',' + LDAP_BASE_DN
-    fullname = user['firstname'] + ' ' + user['lastname']
+   #fullname = user['firstname'] + ' ' + user['lastname']
+    fullname = ' '.join(user['firstname'], user['lastname'])
     gid = find_gid(user['group'])
     lastchange = int(math.floor(time() / 86400))
 
