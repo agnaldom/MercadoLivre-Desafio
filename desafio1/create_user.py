@@ -6,6 +6,9 @@ import csv
 import getpass
 import sys
 import string
+import math
+from random import choice
+from time import time
 
 ########## Constants ##########
 LDAP_HOTS = "ldap://localhost"
@@ -64,10 +67,47 @@ def generate_password():
         newpasswd = newpasswd + choice(chars)
     return newpasswd
 
+# Creates new entry in LDAP for given user
+def create_user(user, admin_pass):
+    dn = 'uid=' + user['username'] + ',' + LDAP_BASE_DN
+    fullname = user['firstname'] + ' ' + user['lastname']
+    gid = find_gid(user['group'])
+    lastchange = int(math.floor(time() / 86400))
 
+    entry = []
+    entry.extend([
+        ('objectClass', ["person", "organizationalPerson", "inetOrgPerson", "posixAccount"]),
+        ('uid', user['username']),
+        ('cn', fullname),
+        ('givenname', user['firstname']),
+        ('sn', user['lastname']),
+        ('mai', user['emai']),
+        ('shadowMax', "99999"),
+        ('shadowWarning', "7"),
+        ('shadowLastChange', str(lastchange)),
+        ('userPassword', user['password'])
+    ])
+    if (len(user['hosts'])):
+        entry.append( ('host', user['hosts']) )
+    
+    ldap_conn = ldap.initialize(LDAP_HOST)
+    ldap_conn.simple_bind_s(LDAP_ADMIN_DN, admin_pass)
+
+    try:
+        ldap_conn.add_s(dn, entry)
+    finally:
+        ldap_conn.unbind_()
 
 ######### main #############
 admin_pass = input_ldap_pass()
 try_ldap_bind(admin_pass)
 
 user = input_data()
+
+user['password'] = generate_password()
+print("Creating LDAP entry")
+create_user(user, admin_pass)
+
+print("")
+print("Account for user " + user['username'] + " (" + str(user['uid']) + ") successfuly created")
+print("Initial password is: " + user['password'])
