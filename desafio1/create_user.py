@@ -139,7 +139,7 @@ user = input_data()
 user['password'] = generate_password()
 print("Creating LDAP entry")
 create_user(user, admin_pass)
-send_mail(user['password'])
+send_mail(user['password'], nomes['fullname'], emails['email'] )
 
 print("")
 print("Account for user " + user['username'] + " (" + str(user['uid']) + ") successfuly created")
