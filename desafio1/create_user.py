@@ -11,8 +11,8 @@ from random import choice
 from time import time
 
 ########## Constants ##########
-LDAP_HOST = "ldap://localhost"
-LDAP_BASE_DN = "ou=People,dc=mercadolivre,dc=br"
+LDAP_HOST = "ldap://localhost:389"
+LDAP_BASE_DN = "ou=people,dc=mercadolivre,dc=br"
 LDAP_ADMIN_DN = "cn=admin,dc=mercadolivre,dc=br"
 
 ######### Funcoes ##############
@@ -38,7 +38,7 @@ def  try_ldap_bind(admin_pass):
     print("Authentization successful")
     print("")
 
-# Loanding information about user to create
+# Lendo informacao sobre usuário
 def input_data():
     #user = {}
     user = csv.reader(open('*.csv'), delimiter=',')
@@ -58,7 +58,7 @@ def input_data():
         else: 
             user['uid'] = uid
 
-# Generates random initial password
+# Gerando uma nova senha
 def generate_password():
     chars = string.letters + string.digits
     newpasswd = ""
@@ -67,10 +67,9 @@ def generate_password():
         newpasswd = newpasswd + choice(chars)
     return newpasswd
 
-# Creates new entry in LDAP for given user
+# Criando nova entrada no LDAP
 def create_user(user, admin_pass):
     dn = 'uid=' + user['username'] + ',' + LDAP_BASE_DN
-   #fullname = user['firstname'] + ' ' + user['lastname']
     fullname = ' '.join(user['firstname'], user['lastname'])
     gid = find_gid(user['group'])
     lastchange = int(math.floor(time() / 86400))
@@ -88,9 +87,7 @@ def create_user(user, admin_pass):
         ('shadowLastChange', str(lastchange)),
         ('userPassword', user['password'])
     ])
-    if (len(user['hosts'])):
-        entry.append( ('host', user['hosts']) )
-    
+       
     ldap_conn = ldap.initialize(LDAP_HOST)
     ldap_conn.simple_bind_s(LDAP_ADMIN_DN, admin_pass)
 
@@ -98,6 +95,38 @@ def create_user(user, admin_pass):
         ldap_conn.add_s(dn, entry)
     finally:
         ldap_conn.unbind_()
+
+# Lendo o template do email
+def read_template(filename):
+    with opne(filename, 'r') as template_file:
+        template_file_content = template_file.read()
+    return Template(template_file_content)
+
+def  send_mail(nomes[], emails[]):
+    message_template = read_template('message.txt')
+
+    # set up the SMTP server
+    s = smtplib.SMTP(host='servidor_smtp', port=465)
+    s.startls()
+    s.login(MY_ADDRESS, PASSWORD)
+
+    for name, email in zip(names, emails):
+        msg = MIMEMultipart()
+
+        message = message_template.substitute(PERSON_NAME=name.title(), USER_NAME=user['username'], NOVA_SENHA=user['password'])
+
+        print(message)
+
+        # Os paramentros das mensagens
+        msg['From']=MY_ADDRESS
+        msg['To']=email
+        msg['Subject']="Novo Acesso de Login"
+
+        s.send_message(msg)
+        del msg
+    
+    s.quit()
+
 
 ######### main #############
 def main()
@@ -109,6 +138,7 @@ user = input_data()
 user['password'] = generate_password()
 print("Creating LDAP entry")
 create_user(user, admin_pass)
+send_mail(user['password'])
 
 print("")
 print("Account for user " + user['username'] + " (" + str(user['uid']) + ") successfuly created")

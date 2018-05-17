@@ -1,0 +1,9 @@
+Prezado(a) ${PERSON_NAME}, 
+
+O seu login de acesso é:
+Usuário: $(USER_NAME) 
+Senha: $(NOVA_SENHA)
+
+Por favor trocar a senha no seu primeiro acesso
+
+Sds:
