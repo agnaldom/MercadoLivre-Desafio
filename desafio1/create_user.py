@@ -7,6 +7,7 @@ import getpass
 import sys
 import string
 import math
+import smtplib
 from random import choice
 from time import time
 
