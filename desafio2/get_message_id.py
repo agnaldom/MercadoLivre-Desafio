@@ -1,54 +1,74 @@
-import email
-import getpass
-import imaplib
-import os
-import sys
+import email, getpass, imaplib,  os,  sys
 
 detach_dir = '.' # directory where to save attachments (default: current)
 user = input("Enter your GMail username:")
 pwd = getpass.getpass("Enter your password: ")
 
-# connecting to the gmail imap server
-m = imaplib.IMAP4_SSL("imap.gmail.com")
-m.login(user,pwd)
-m.select("INBOX") # here you a can choose a mail box like INBOX instead
-# use m.list() to get all the mailboxes
+def read_email():
+    try:
+        # connecting to the gmail imap server
+        m = imaplib.IMAP4_SSL("imap.gmail.com")
+        m.login(user, pwd)
+        m.select('inbox', readonly=False) # here you a can choose a mail box like INBOX instead
+        # use m.list() to get all the mailboxes
 
-#resp, items = m.search(None, "ALL") # you could filter using the IMAP rules here (check http://www.example-code.com/csharp/imap-search-critera.asp)
-resp, items = m.uid('search', None, "(SUBJECT Devops SUBJECT DevOps)")
-items = items[0].split() # getting the mails id
+        resp, items = m.search(None, 'SUBJECT DevOps')
+        mail_ids = items[0]
 
-for mail in items:
-    #resp, data = m.fetch(emailid, "`(RFC822)`") # fetching the mail, "`(RFC822)`" means "get the whole stuff", but you can ask for headers only, etc
-    resp, data = m.fetch(mail, "`(RFC822)`")
-    email_body = data[0][1] # getting the mail content
-    mail = email.message_from_string(email_body) # parsing the mail content to get a mail object
+        id_list = mail_ids.split()
+        first_email_id = int(id_list[0])
+        latest_email_id = int(id_list[-1])
+        print("Reading emails from {} to {}.\n\n".format(latest_email_id, first_email_id))
 
-    #Check if any attachments at all
-    if mail.get_content_maintype() != 'multipart':
-        continue
+        for i in range(latest_email_id, first_email_id, -1):
+            typ, data = m.fetch(str.encode(str(i)), '(RFC822)')
 
-    print ("["+mail["From"]+"] :" + mail["Subject"])
+            for response_part in data:
+                if not isinstance(response_part, tuple):
+                    continue
+    
+                msg = email.message_from_string(response_part[1].decode('utf-8'))
+                mail_str = str(msg)
 
-    # we use walk to create a generator so we can iterate on the parts and forget about the recursive headach
-    for part in mail.walk():
-        # multipart are just containers, so we skip them
-        if part.get_content_maintype() == 'multipart':
-            continue
+                # Se e-mail não contém a estrutura que precisamos, não processa
+                if mail_str.find('<td class="luceeH0">SQL</td>') <= 1:
+                    continue
 
-        # is this part an attachment ?
-        if part.get('Content-Disposition') is None:
-            continue
+                email_subject = msg['subject']
+                email_from = msg['from']
 
-        #filename = part.get_filename()
+                # INFORMAÇÃO DE DETALHE
+                detail_pos_ini = mail_str.find('class="luceeH0">Detail</td>')
+                detail_pos_inter = mail_str.find('<td class="luceeN1">', detail_pos_ini)
+                detail_pos_fim = mail_str.find('</td>', detail_pos_inter)
+                detail_str = mail_str[detail_pos_inter + 20:detail_pos_fim]
 
-        filename = mail["From"] + "_hw1answer"
-        
-        att_path = os.path.join(detach_dir, filename)
+                # SQL EVENTO
+                sql_pos_ini = mail_str.find('<td class="luceeH0">SQL</td>')
+                sql_pos_inter = mail_str.find('<td class="luceeN1">', sql_pos_ini)
+                sql_pos_fim = mail_str.find('</td>', sql_pos_inter)
+                sql_str = mail_str[sql_pos_inter + 20:sql_pos_fim]
 
-        #Check if its already there
-        if not os.path.isfile(att_path) :
-            # finally write the stuff
-            fp = open(att_path+".csv", 'wb')
-            fp.write(part.get_payload(decode=True))
-fp.close()
+                # DATA/HORA EVENTO
+                datetime_error_pos_ini = mail_str.find('<h2>{ts ')
+                datetime_error_pos_fim = mail_str.find('</h2>', datetime_error_pos_ini)
+                datetime_error = mail_str[datetime_error_pos_ini + 4:datetime_error_pos_fim]
+
+                print('From : ' + email_from + '\n')
+                print('Subject : ' + email_subject + '\n')
+                print('DATA/HORA: ' + datetime_error + '\n')
+                print('EVENTO: ' + detail_str.replace('\n', ' ') + '\n')
+                print('SQL: \n' + sql_str + '\n')
+
+                mail.store(str.encode(str(i)), '+X-GM-LABELS', 'seu_label')
+
+                print('----------------------------------------------------------')
+                print('----------------------------------------------------------')
+
+        mail.logout()
+
+    except Exception as e:
+        print(e)
+
+if __name__ == '__main__':
+    read_email()
